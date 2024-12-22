@@ -48,15 +48,12 @@ def step(
         return dx, dy
 
     x, y = curr_pos
-    dx, dy = _get_dx_dy(direction=direction)
-
-    assert (dx * dy == 0) and (dx != dy)
+    dx, dy = _get_dx_dy(direction)
+    height, width = len(grid), len(grid[0])
 
     new_x, new_y = x + dx, y + dy
 
-    if ((new_x < 0) or (new_x >= len(grid))) or (
-        (new_y < 0) or (new_y >= len(grid[new_x]))
-    ):
+    if not (0 <= new_x < height and 0 <= new_y < width):
         return new_x, new_y, ""
 
     if grid[new_x][new_y] == "#":
@@ -67,11 +64,20 @@ def step(
     return new_x, new_y, direction
 
 
-x, y, direction = locate_starting_pos(grid=data)
-n = 0
-while direction:
-    n += 1 if data[x][y] != "X" else 0
-    data[x][y] = "X"
-    x, y, direction = step(grid=data, curr_pos=(x, y), direction=direction)
+def count_visited_positions(grid, start_pos, start_direction):
+    visited = set()
+    x, y = start_pos
+    direction = start_direction
 
-print("Number of distinct positions the guard will visit:", n)
+    while direction:
+        pos = (x, y)
+        if pos not in visited:
+            visited.add(pos)
+        x, y, direction = step(grid=grid, curr_pos=pos, direction=direction)
+
+    return len(visited)
+
+
+x, y, direction = locate_starting_pos(grid=data)
+result = count_visited_positions(data, (x, y), direction)
+print("Number of distinct positions the guard will visit:", result)
