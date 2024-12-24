@@ -34,9 +34,23 @@ def rule_possibly_true(true_result, current_value, args, arg_i):
     ) or rule_possibly_true(true_result, current_value * args[arg_i], args, arg_i + 1)
 
 
-def solve_rule(rule):
+def rule_possibly_true2(true_result, current_value, args, arg_i):
+    if arg_i == len(args):
+        return current_value == true_result
+    return (
+        rule_possibly_true2(true_result, current_value + args[arg_i], args, arg_i + 1)
+        or rule_possibly_true2(
+            true_result, current_value * args[arg_i], args, arg_i + 1
+        )
+        or rule_possibly_true2(
+            true_result, int(str(current_value) + str(args[arg_i])), args, arg_i + 1
+        )
+    )
+
+
+def solve_rule(rule, rule_func=rule_possibly_true):
     result, args = rule
-    if rule_possibly_true(result, args[0], args, 1):
+    if rule_func(result, args[0], args, 1):
         return result
     return 0
 
@@ -45,5 +59,12 @@ S = 0
 for rule in data:
     rule = parse_rule(rule)
     S += solve_rule(rule)
+
+print(S)
+
+S = 0
+for rule in data:
+    rule = parse_rule(rule)
+    S += solve_rule(rule, rule_possibly_true2)
 
 print(S)
