@@ -8,6 +8,18 @@ def generate_cycling_pairs(
     num_cycles: int = -1,
     padding_length: int = 5,
 ) -> Generator[Tuple[Tuple[int, int], int], None, None]:
+    """
+    Generate a sequence of cycling pairs of coordinates.
+
+    Args:
+        cycle_length (int): The number of unique coordinate pairs to generate for the cycle. Default is 5.
+        num_cycles (int): The number of cycles to generate. If -1, the generator will cycle indefinitely. Default is -1.
+        padding_length (int): The number of unique coordinate pairs to generate for padding. Default is 5.
+
+    Yields:
+        Tuple[Tuple[int, int], int]: A tuple containing a coordinate pair and an index. The index is -1 for padding pairs and
+        ranges from 0 to cycle_length-1 for cycling pairs.
+    """
     max_cycle_pair_value = 10
     pairs = set()
     while len(pairs) < cycle_length:
@@ -64,7 +76,17 @@ def detect_in_loop(
 def locate_starting_pos(
     grid: List[List[chr]], start_symbols: Set[chr] = {"^", "v", "<", ">"}
 ) -> Tuple[int, int, chr]:
+    """
+    Locate the starting position in a grid based on specified start symbols.
 
+    Args:
+        grid (List[List[chr]]): A 2D list representing the grid.
+        start_symbols (Set[chr], optional): A set of characters representing the start symbols. Defaults to {"^", "v", "<", ">"}.
+
+    Returns:
+        Tuple[int, int, chr]: A tuple containing the row index, column index, and the start symbol found.
+                              Returns (-1, -1, "") if no start symbol is found.
+    """
     for i in range(len(grid)):
         j = [idx for idx in range(len(grid[i])) if grid[i][idx] in start_symbols]
         if len(j) == 1:
@@ -78,6 +100,18 @@ def step(
     curr_pos: Tuple[int, int, chr],
     next_direction_map: Dict[chr, chr] = {"^": ">", ">": "v", "v": "<", "<": "^"},
 ) -> Tuple[int, int, chr]:
+    """
+    Move a position in a grid based on the current direction and handle obstacles.
+
+    Args:
+        grid (List[List[chr]]): A 2D list representing the grid where each cell can be a character.
+        curr_pos (Tuple[int, int, chr]): A tuple containing the current x and y coordinates and the direction.
+        next_direction_map (Dict[chr, chr], optional): A dictionary mapping the current direction to the next direction
+            when an obstacle is encountered. Defaults to {"^": ">", ">": "v", "v": "<", "<": "^"}.
+
+    Returns:
+        Tuple[int, int, chr]: A tuple containing the new x and y coordinates and the new direction.
+    """
 
     def _get_dx_dy(direction):
         dx = 1 if direction == "v" else -1 if direction == "^" else 0
@@ -121,7 +155,7 @@ if __name__ == "__main__":
         ]
     ]
 
-    for obstacle_coordinate in [(9, 2), (7, 0), (7, 2)]:  # [(9, 2), (7, 0), (7, 2)]
+    for obstacle_coordinate in [(9, 2), (7, 0), (7, 2)]:
         data = [row.copy() for row in original_data]
         data[obstacle_coordinate[0]][obstacle_coordinate[1]] = "#"
         print("=" * 50)
@@ -140,7 +174,10 @@ if __name__ == "__main__":
         loop_len = 0
         display_grid = [data[i].copy() for i in range(len(data))]
 
-        while direction:
+        max_iterations = 10_000  # Set a maximum iteration limit
+        iteration_count = 0
+        while direction and iteration_count < max_iterations:
+            iteration_count += 1
             pos = (x, y, direction)
             display_grid[x][y] = direction
 
