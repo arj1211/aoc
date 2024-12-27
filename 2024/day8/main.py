@@ -8,7 +8,7 @@ with open(input_data_path, "r") as input_file:
     data = input_file.readlines()
 
 
-def setup_test_cases():
+def setup_test_cases_pt1():
 
     test_cases = [
         (
@@ -105,6 +105,77 @@ def setup_test_cases():
     return test_cases
 
 
+def setup_test_cases_pt2():
+
+    test_cases = [
+        (
+            [
+                "T.........",
+                "...T......",
+                ".T........",
+                "..........",
+                "..........",
+                "..........",
+                "..........",
+                "..........",
+                "..........",
+                "..........",
+            ],
+            [
+                "T....#....",
+                "...T......",
+                ".T....#...",
+                ".........#",
+                "..#.......",
+                "..........",
+                "...#......",
+                "..........",
+                "....#.....",
+                "..........",
+            ],
+        ),
+        (
+            [
+                "............",
+                "........0...",
+                ".....0......",
+                ".......0....",
+                "....0.......",
+                "......A.....",
+                "............",
+                "............",
+                "........A...",
+                ".........A..",
+                "............",
+                "............",
+            ],
+            [
+                "##....#....#",
+                ".#.#....0...",
+                "..#.#0....#.",
+                "..##...0....",
+                "....0....#..",
+                ".#...#A....#",
+                "...#..#.....",
+                "#....#.#....",
+                "..#.....A...",
+                "....#....A..",
+                ".#........#.",
+                "...#......##",
+            ],
+        ),
+    ]
+
+    _test_cases = []
+    for data, result in test_cases:
+        _data = [list(r) for r in data]
+        _result = [list(r) for r in result]
+        _test_cases.append((_data, _result))
+    test_cases = _test_cases
+
+    return test_cases
+
+
 def _get_antenna_positions(data) -> Dict[chr, Set[Tuple[int, int]]]:
     antenna_positions = {}
     for i, row in enumerate(data):
@@ -128,7 +199,9 @@ def _get_antenna_pairs(
     return antenna_position_pairs
 
 
-def _get_antinode_positions(antenna_position_pairs) -> Dict[chr, Set[Tuple[int, int]]]:
+def _get_antinode_positions(
+    antenna_position_pairs, harmonics
+) -> Dict[chr, Set[Tuple[int, int]]]:
 
     def _get_points_info_and_distance(p1, p2):
         dx = p2[0] - p1[0]
@@ -137,13 +210,21 @@ def _get_antinode_positions(antenna_position_pairs) -> Dict[chr, Set[Tuple[int, 
 
     antinode_positions = {}
     for antenna, p1, p2 in antenna_position_pairs:
-        dx, dy = _get_points_info_and_distance(p1, p2)
-        antinode1 = (p1[0] - dx, p1[1] - dy)
-        antinode2 = (p2[0] + dx, p2[1] + dy)
         if antenna not in antinode_positions:
             antinode_positions[antenna] = set()
-        antinode_positions[antenna].add(antinode1)
-        antinode_positions[antenna].add(antinode2)
+        dx, dy = _get_points_info_and_distance(p1, p2)
+
+        if not harmonics:
+            antinode1 = (p1[0] - dx, p1[1] - dy)
+            antinode2 = (p2[0] + dx, p2[1] + dy)
+            antinode_positions[antenna].add(antinode1)
+            antinode_positions[antenna].add(antinode2)
+        else:
+            for i in range(1, harmonics + 1):
+                antinode1 = (p1[0] - dx * i, p1[1] - dy * i)
+                antinode2 = (p2[0] + dx * i, p2[1] + dy * i)
+                antinode_positions[antenna].add(antinode1)
+                antinode_positions[antenna].add(antinode2)
 
     return antinode_positions
 
@@ -165,10 +246,10 @@ def _filter_antinode_positions_within_map(
     return filtered_antinode_positions
 
 
-def get_antinode_positions_within_map(data):
+def get_antinode_positions_within_map(data, harmonics: int = 0):
     antenna_positions = _get_antenna_positions(data)
     antenna_position_pairs = _get_antenna_pairs(antenna_positions)
-    antinode_positions = _get_antinode_positions(antenna_position_pairs)
+    antinode_positions = _get_antinode_positions(antenna_position_pairs, harmonics)
     max_x, max_y = len(data), len(data[0])
     antinode_positions = _filter_antinode_positions_within_map(
         antinode_positions, max_x, max_y
@@ -184,9 +265,10 @@ def _convert_antinode_positions_to_map(antinode_positions, data):
     return data
 
 
-def run_tests(test_cases):
+def run_tests(test_cases, harmonics=0):
+    print("Running tests")
     for data, solution in test_cases:
-        antinode_positions = get_antinode_positions_within_map(data)
+        antinode_positions = get_antinode_positions_within_map(data, harmonics)
         result = _convert_antinode_positions_to_map(antinode_positions, data)
         success = True
         print(
@@ -202,7 +284,7 @@ def run_tests(test_cases):
 
 
 if __name__ == "__main__":
-    test_cases = setup_test_cases()
+    test_cases = setup_test_cases_pt1()
     run_tests(test_cases)
 
     data = [list(r.strip()) for r in data]
@@ -213,3 +295,18 @@ if __name__ == "__main__":
     for antinodes in antinode_positions.values():
         antinode_set.update(antinodes)
     print(f"Total unique antinodes: {len(antinode_set)}")
+    print()
+
+    test_cases = setup_test_cases_pt2()
+    harmonics = max(map(lambda x: len(x[0]) + len(x[0][0]), test_cases))
+    run_tests(test_cases, harmonics=harmonics)
+
+    antinode_positions = get_antinode_positions_within_map(
+        data, harmonics=len(data) + len(data[0])
+    )
+
+    antinode_set = set()
+    for antinodes in antinode_positions.values():
+        antinode_set.update(antinodes)
+    print(f"Total unique antinodes with harmonics: {len(antinode_set)}")
+    print()
