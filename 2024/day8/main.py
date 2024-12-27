@@ -209,8 +209,7 @@ if __name__ == "__main__":
 
     antinode_positions = get_antinode_positions_within_map(data)
 
-    s = 0
-    for antenna, antinodes in antinode_positions.items():
-        print(f"Antenna {antenna}: {len(antinodes)} antinodes")
-        s += len(antinodes)
-    print(f"Total antinodes: {s}")
+    antinode_set = set()
+    for antinodes in antinode_positions.values():
+        antinode_set.update(antinodes)
+    print(f"Total unique antinodes: {len(antinode_set)}")
